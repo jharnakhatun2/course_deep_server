@@ -6,9 +6,9 @@
 	 "ratings" : "4.9",
 	 "time": "4 hours",
 	 "teacher" : "Mark Loue",
-	 "short-des":" Imagine being able to create a web app that is downloaded by millions of paying customers—or a website that’s visited by people from all seven continents.",
+	 "shortDes":" Imagine being able to create a web app that is downloaded by millions of paying customers—or a website that’s visited by people from all seven continents.",
      "description": "The unique Certified Web Development Professional credential will provide proof that you have mastered the fundamental skills needed by new web developers. You'll have a full understanding of HTML5, the language used to structure web sites and many mobile applications that you use every day. From there, you'll move on to Javascript-- the language of interaction on the web. The use of Javascript is growing at a lightning pace and it's been called the most important language to learn today, by multiple experts. Each language carries its own individual Specialist Designation for which you earn a certificate, the privilege of using the specialist credential badge, and a personal online transcript page that shows your designations, certification, and accomplishments.", 
-    "image":"courseImg/1.jpg"
+    "image":"http://localhost:5000/courseImg/1.jpg"
     },
     {
      "id" : 2,
@@ -17,19 +17,20 @@
 	 "ratings" : "4.8",
 	 "time": "5 hours",
 	 "teacher" : "Dollar Due",
-	 "short-des" : "Launch your career as a front-end developer. Build job-ready skills for an in-demand career and earn a credential from Meta. No degree or prior experience required to get started.",
+	 "shortDes" : "Launch your career as a front-end developer. Build job-ready skills for an in-demand career and earn a credential from Meta. No degree or prior experience required to get started.",
      "description": "What you will learn : Create a responsive website using HTML to structure content, CSS to handle visual style, and JavaScript to develop interactive experiences. Learn to use React in relation to Javascript libraries and frameworks. Learn Bootstrap CSS Framework to create webpages and work with GitHub repositories and version control.Prepare for a coding interview, learn best approaches to problem-solving, and build portfolio-ready projects you can share during job interviews.", 
-     "image":"courseImg/2.jpg"
+     "image":"http://localhost:5000/courseImg/2.jpg"
     },
     {
      "id" : 3,
      "name":"Full-Stack Web Development with React",
      "price": "$18.99",
+     "time": "6.5 hours",
 	 "ratings" : "4.8",
 	 "teacher" : "Muppala Jogesh",
-	 "short-des" : "Build Complete Web and Hybrid Mobile Solutions. Master front-end web, hybrid mobile app and server-side development in three comprehensive courses.",
+	 "shortDes" : "Build Complete Web and Hybrid Mobile Solutions. Master front-end web, hybrid mobile app and server-side development in three comprehensive courses.",
      "description": "Learn front-end and hybrid mobile development, with server-side support, for implementing a multi-platform solution.The first two courses in this Specialization cover front-end frameworks: Bootstrap 4 and React. On the server side, you’ll learn to implement NoSQL databases using MongoDB, work within a Node.js environment and Express framework, and communicate to the client side through a RESTful API. Learners enrolling in this Specialization are expected to have prior working knowledge of HTML, CSS and JavaScript.Ideally learners should complete the courses in the specified sequence. Learners will work on hands-on exercises, culminating in development of a full-fledged application at the end of each course. Each course also includes a mini-Capstone Project as part of the Honors Track where you’ll apply your skills to build a fully functional project.", 
-     "image":"courseImg/3.jpg"
+     "image":"http://localhost:5000/courseImg/3.jpg"
     },
 {
         "id" : 4,
@@ -38,9 +39,9 @@
 	  "ratings" : "4.6",
 	  "time": "3.5 hours",
 	  "teacher" : "Jhon Doe",
-	  "short-des" : "By the end of this project, you will create a full web-site that is attractive and user friendly using a free content management system, WordPress.",
+	  "shortDes" : "By the end of this project, you will create a full web-site that is attractive and user friendly using a free content management system, WordPress.",
       "description": " You will learn how to create a website utilizing themes and plug-ins using the web creation tool. You’ll have a virtual space to showcase your business with customers who want to stay connected.In a video that plays in a split-screen with your work area, your instructor will walk you through these steps:Set up a New Site for Development in Wordpress, Update Homepage Settings and Edit Content, Edit the Homepage,Add and Link Secondary Webpages,Edit and Publish Webpages and Blogposts,Embed Links,Add Social Media Buttons.", 
-     "image":"courseImg/4.jpg"
+     "image":"http://localhost:5000/courseImg/4.jpg"
     },
     {
      "id" : 5,
@@ -49,9 +50,9 @@
 	 "ratings" : "4.9",
 	 "time": "5 hours",
 	 "teacher" : "Mustafa Hussain",
-	 "short-des" : "Learn to build web applications using HTML, CSS, Bootstrap, Javascript, jQuery, Python 3, and Django!.Create Fully Functional Websites Using Django 4",
+	 "shortDes" : "Learn to build web applications using HTML, CSS, Bootstrap, Javascript, jQuery, Python 3, and Django!.Create Fully Functional Websites Using Django 4",
      "description": " WHAT TOPICS WILL BE COVERED? I know that you're here because you value your time. If you wanted to watch someone program for hours and hours without explaining what they're doing, you'd be on YouTube. By getting this course, you can be rest assured that the course is carefully thought out and edited. There are beautiful animations that explain all the difficult concepts and I’m always on hand to answer student questions. WHAT DOES THIS COURSE FEATURE? I'll take you step-by-step through engaging and fun video tutorials and teach you everything you need to know to succeed as a Django developer. The course includes 17+ hours of HD video tutorials and builds your programming knowledge while making a real world web application. By the end of this course, you will be fluent in Python programming and be ready to build your own Django apps and become a full stack Django developer. You'll also have a feature-rich application built by the end of this course that you can show off to any potential employer.By the end of this course, you’ll have mastered the skills of developing high-performance, feature-rich, and engaging web apps using Django.", 
-     "image":"courseImg/5.jpg"
+     "image":"http://localhost:5000/courseImg/5.jpg"
     },
     {
      "id" : 6,
@@ -60,8 +61,8 @@
 	 "ratings" : "4.7",
 	 "time": "4 hours",
 	 "teacher" : "Alicea Tom",
-	 "short-des" : "NodeJS is a rapidy growing web server technology, and Node developers are among the highest paid in the industry.",
+	 "shortDes" : "NodeJS is a rapidy growing web server technology, and Node developers are among the highest paid in the industry.",
      "description": "Knowing NodeJS well will get you a job or improve your current one by enabling you to build high quality, robust web applications. In this course you will gain a deep understanding of Node, learn how NodeJS works under the hood, and how that knowledge helps you avoid common pitfalls and drastically improve your ability to debug problems.In this course we'll look at how the C++ written V8 Javascript engine works and how NodeJS uses it to expand the abilities of Javascript. You'll learn how to structure your code for reuse and to be easier to understand, manage, and expand using modules and understand how modules really work. You'll learn how asynchronous code works in Node and the Node event loop, as well as how to use the event emitter, streams, buffers, pipes, and work with files. We'll see how that leads to building a web server in Node. We'll dive into web sites, web apps and APIs with Express and learn how Express can save us time as Node developers.You'll also gain an understanding of npm, connecting to databases, and the MEAN stack! During it all you'll gain a deep understanding of the Javascript concepts and other computer science concepts that power Node. NodeJS doesn't have to be hard to learn. The biggest mistake most coding tutorials make is expecting someone to learn simply by imitating others' code. Real world situations are never exactly like the tutorial. I believe the best way to learn is to understand how a tool works and what it does for you, look at examples, and then try it yourself. That's how this course is built, with the goal to help you both learn and understand NodeJS.", 
-    "image":"courseImg/6.jpg"
+    "image":"http://localhost:5000/courseImg/6.jpg"
     }
 ]
