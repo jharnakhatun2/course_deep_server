@@ -10,7 +10,7 @@ app.use(cors());
 app.use(express.static('public'))
 
 app.get('/', (req, res) => {
-    res.send('Course !! O my Allah')
+    res.send('welcome to server side')
 });
 
 app.get('/courses', (req, res) =>{
