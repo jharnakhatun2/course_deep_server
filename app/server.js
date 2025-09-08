@@ -1,5 +1,6 @@
 const express = require("express");
 const cors = require("cors");
+const cookieParser = require("cookie-parser");
 
 const userRoutes = require("./routes/users");
 const coursesRoutes = require("./routes/courses");
@@ -8,11 +9,15 @@ const eventsRoutes = require("./routes/events");
 const blogsRoutes = require("./routes/blogs");
 
 const app = express();
-const port = 5000;
+const port = process.env.PORT || 5000;
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: ["http://localhost:5173", "https://course-deep.vercel.app"],
+  credentials: true,
+}));
 app.use(express.json());
+app.use(cookieParser());
 
 // Routes
 app.use("/users", userRoutes);
