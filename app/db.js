@@ -14,7 +14,7 @@ const client = new MongoClient(uri, {
 });
 
 async function connectToDatabase() {
-  if (!client.topology?.isConnected()) {
+  if (!client.topology || !client.topology.isConnected()) {
     await client.connect();
     console.log("Connected to MongoDB");
   }
@@ -26,7 +26,6 @@ async function connectToDatabase() {
     categoriesDatabase: db.collection("categories"),
     blogsDatabase: db.collection("blogs"),
     eventsDatabase: db.collection("events"),
-
   };
 }
 

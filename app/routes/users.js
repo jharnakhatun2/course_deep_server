@@ -6,6 +6,18 @@ const { ObjectId } = require("mongodb");
 const verifyToken = require("./verifyToken");
 const router = express.Router();
 
+/******************** Check User ********************/
+router.get("/me", (req, res) => {
+  const token = req.cookies?.token;
+  if (!token) return res.status(401).json({ message: "Unauthorized" });
+
+  try {
+    const decoded = jwt.verify(token, process.env.ACCESS_TOKEN);
+    res.json({ user: { name: decoded.name, email: decoded.email, role: decoded.role } }); // send user data
+  } catch (err) {
+    res.status(401).json({ message: "Invalid token" });
+  }
+});
 
 /******************** Get all User ********************/
 router.get("/", async (req, res) => {
