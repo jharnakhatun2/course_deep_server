@@ -1,47 +1,13 @@
 const express = require("express");
-const router = express.Router();
 require("dotenv").config();
 const jwt = require("jsonwebtoken");
 const connectToDatabase = require("../db");
 const { ObjectId } = require("mongodb");
+const verifyToken = require("./verifyToken");
+const router = express.Router();
 
-//verify token
-const verifyToken = (req, res, next) => {
-  const token = req.cookies?.token;
-  if (!token) {
-    return res
-      .status(401)
-      .send({ message: "Unauthorized access - No token provided" });
-  }
-  jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
-    if (err) {
-      return res
-        .status(401)
-        .send({ message: "Unauthorized access - Invalid token" });
-    }
-    req.user = decoded;
-    next();
-  });
-};
 
-//jwt token creation endpoint
-router.post("/jwt", async (req, res) => {
-  const user = req.body;
-  const token = jwt.sign(
-    { email: user.email, role: user.role || "user" },
-    process.env.ACCESS_TOKEN,
-    { expiresIn: "1d" }
-  );
-  res
-    .cookie("token", token, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "strict",
-    })
-    .send({ successful: true });
-});
-
-// GET all Users
+/******************** Get all User ********************/
 router.get("/", async (req, res) => {
   try {
     const { userDatabase } = await connectToDatabase();
@@ -52,6 +18,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+/******************** Get single User ********************/
 // GET User by ID
 router.get("/:id", async (req, res) => {
   try {
@@ -65,22 +32,7 @@ router.get("/:id", async (req, res) => {
   }
 });
 
-// POST new User
-router.post("/", async (req, res) => {
-  try {
-    const { userDatabase } = await connectToDatabase();
-    const userInfo = req.body;
-    const existing = await userDatabase.findOne({ email: userInfo.email });
-    if (existing) {
-      return res.status(409).send({ message: "Email already registered" });
-    }
-    const result = await userDatabase.insertOne(userInfo);
-    res.send(result);
-  } catch (err) {
-    res.status(500).send("Server error");
-  }
-});
-
+/******************** Update ********************/
  // Update user info - only if token email matches
     router.patch("/", verifyToken, async (req, res) => {
       try {
@@ -113,6 +65,7 @@ router.post("/", async (req, res) => {
       }
     });
 
+    /******************** Delete ********************/
     // Delete user - user can delete their own account, admin can delete any
     router.delete("/:id", verifyToken, async (req, res) => {
       try {
@@ -140,17 +93,6 @@ router.post("/", async (req, res) => {
         console.error("Delete user error:", error);
         res.status(500).send({ message: "Internal Server Error" });
       }
-    });
-
-    // Logout endpoint (clear token cookie)
-    router.post("/logout", (req, res) => {
-      res
-        .clearCookie("token", {
-          httpOnly: true,
-          secure: true,
-          sameSite: "strict",
-        })
-        .json({ success: true, message: "Logged out successfully" });
     });
 
 

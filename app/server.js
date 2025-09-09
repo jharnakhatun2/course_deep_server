@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
 
+const authRoutes = require("./routes/userAuth");
 const userRoutes = require("./routes/users");
 const coursesRoutes = require("./routes/courses");
 const categoriesRoutes = require("./routes/categories");
@@ -20,6 +21,7 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
+app.use("/auth", authRoutes);
 app.use("/users", userRoutes);
 app.use("/courses", coursesRoutes);
 app.use("/categories", categoriesRoutes);
