@@ -6,7 +6,7 @@ const { ObjectId } = require("mongodb");
 const verifyToken = require("./verifyToken");
 const router = express.Router();
 
-/******************** Check User ********************/
+/******************** Check Current User Observing********************/
 router.get("/me", (req, res) => {
   const token = req.cookies?.token;
   if (!token) return res.status(401).json({ message: "Unauthorized" });
