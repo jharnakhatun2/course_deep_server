@@ -11,7 +11,7 @@ router.post("/register", async (req, res) => {
     const { userDatabase } = await connectToDatabase();
     const { name, email, password } = req.body;
     const existingUser = await userDatabase.findOne({ email });
-    if (existingUser){
+    if (existingUser) {
       return res.status(409).json({ message: "Email already registered" });
     }
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -32,7 +32,6 @@ router.post("/register", async (req, res) => {
   }
 });
 
-
 /******************** Login ********************/
 router.post("/login", async (req, res) => {
   try {
@@ -40,20 +39,25 @@ router.post("/login", async (req, res) => {
     const { email, password } = req.body;
     const user = await userDatabase.findOne({ email });
     if (!user) return res.status(404).json({ message: "Email not found" });
-    
+
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid)
       return res.status(401).json({ message: "Incorrect password" });
 
-    const token = jwt.sign({ email: user.email, role: user.role }, process.env.ACCESS_TOKEN, {
-      expiresIn: "1d",
-    });
+    const token = jwt.sign(
+      { email: user.email, role: user.role },
+      process.env.ACCESS_TOKEN,
+      {
+        expiresIn: "7d",
+      }
+    );
 
     res
       .cookie("token", token, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000,
       })
       .json({ message: "Login successful", token });
   } catch (err) {
@@ -61,17 +65,16 @@ router.post("/login", async (req, res) => {
   }
 });
 
-
 /******************** logout ********************/
 router.post("/logout", (req, res) => {
-      res
-        .clearCookie("token", {
-          httpOnly: true,
-          secure: process.env.NODE_ENV === "production",
-          sameSite: "strict",
-        })
-        .json({ success: true, message: "Logged out successfully" });
-    });
-
+  res
+    .clearCookie("token", {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+    })
+    .json({ success: true, message: "Logged out successfully" });
+});
 
 module.exports = router;
