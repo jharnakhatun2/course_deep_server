@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { ObjectId } = require("mongodb");
 const connectToDatabase = require("../db");
 
 // GET all Events
