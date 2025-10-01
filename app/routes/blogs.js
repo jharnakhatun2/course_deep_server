@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
 });
 
 // UPDATE blog by ID
-router.patch("/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { blogsDatabase } = await connectToDatabase();
     const id = req.params.id;
