@@ -8,6 +8,8 @@ const coursesRoutes = require("./routes/courses");
 const categoriesRoutes = require("./routes/categories");
 const eventsRoutes = require("./routes/events");
 const blogsRoutes = require("./routes/blogs");
+const cartRoutes = require("./routes/cart");
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -27,6 +29,7 @@ app.use("/courses", coursesRoutes);
 app.use("/categories", categoriesRoutes);
 app.use("/events", eventsRoutes);
 app.use("/blogs", blogsRoutes);
+app.use("/cart", cartRoutes);
 
 // Root
 app.get("/", (req, res) => {
