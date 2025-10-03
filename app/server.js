@@ -9,7 +9,7 @@ const categoriesRoutes = require("./routes/categories");
 const eventsRoutes = require("./routes/events");
 const blogsRoutes = require("./routes/blogs");
 const cartRoutes = require("./routes/cart");
-
+const commentsRoutes = require("./routes/comments");
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -30,6 +30,7 @@ app.use("/categories", categoriesRoutes);
 app.use("/events", eventsRoutes);
 app.use("/blogs", blogsRoutes);
 app.use("/cart", cartRoutes);
+app.use("/comments", commentsRoutes);
 
 // Root
 app.get("/", (req, res) => {
