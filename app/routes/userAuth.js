@@ -52,6 +52,15 @@ router.post("/login", async (req, res) => {
       }
     );
 
+    // Create a user object without the password
+    const userWithoutPassword = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt
+    };
+
     res
       .cookie("token", token, {
         httpOnly: true,
@@ -59,7 +68,7 @@ router.post("/login", async (req, res) => {
         sameSite: "lax",
         maxAge: 7 * 24 * 60 * 60 * 1000,
       })
-      .json({ message: "Login successful", token });
+      .json({ message: "Login successful", token: token, user: userWithoutPassword });
   } catch (err) {
     res.status(500).json({ message: "Login error", error: err.message });
   }
