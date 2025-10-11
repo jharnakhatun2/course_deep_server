@@ -6,18 +6,35 @@ const { ObjectId } = require("mongodb");
 const verifyToken = require("./verifyToken");
 const router = express.Router();
 
-/******************** Check Current User Observing********************/
-router.get("/me", verifyToken, (req, res) => {
-  if (!req.user) {
-    return res.status(401).json({ message: "Unauthorized" });
+
+/******************** Check Current User ********************/
+router.get("/me", verifyToken, async (req, res) => {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+
+    const { userDatabase } = await connectToDatabase();
+    const user = await userDatabase.findOne({ email: req.user.email });
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return the same user object structure as login
+    const userWithoutPassword = {
+      _id: user._id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      createdAt: user.createdAt
+    };
+
+    res.json(userWithoutPassword); // ← Remove the nested "user" property
+  } catch (error) {
+    console.error("Get current user error:", error);
+    res.status(500).json({ message: "Server error" });
   }
-  res.json({
-    user: {
-      name: req.user.name,
-      email: req.user.email,
-      role: req.user.role,
-    },
-  });
 });
 
 /******************** Get all User ********************/

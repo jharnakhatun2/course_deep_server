@@ -12,9 +12,9 @@ const verifyToken = (req, res, next) => {
   }
   jwt.verify(token, process.env.ACCESS_TOKEN, (err, decoded) => {
     if (err) {
-      return res
-        .status(401)
-        .send({ message: "Unauthorized access - Invalid token" });
+      // Clear invalid token
+      res.clearCookie("token");
+      return res.status(401).json({ message: "Unauthorized access - Invalid token" });
     }
     req.user = decoded;
     next();
