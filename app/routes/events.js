@@ -54,6 +54,30 @@ router.patch("/:id", async (req, res) => {
   }
 });
 
+
+// PATCH only availableSeats by event ID
+router.patch("/:id/seats", async (req, res) => {
+  try {
+    const { eventsDatabase } = await connectToDatabase();
+    const id = req.params.id;
+    const { seats } = req.body;
+
+    if (seats == null) {
+      return res.status(400).send("availableSeats is required");
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $set: { seats } };
+    const result = await eventsDatabase.updateOne(filter, updateDoc);
+
+    res.send(result);
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
+
+
 // DELETE event by ID
 router.delete("/:id", async (req, res) => {
   try {
