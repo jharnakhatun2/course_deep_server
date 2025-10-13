@@ -15,46 +15,64 @@ router.get("/", async (req, res) => {
   }
 });
 
-// POST new cart item
 router.post("/", async (req, res) => {
   try {
-    const { productId, quantity } = req.body;
+    const { productId, quantity, type } = req.body; // Added 'type' parameter
 
-    if (!productId || !quantity) {
-      return res.status(400).json({ error: "ProductId and quantity required" });
+    if (!productId || !quantity || !type) {
+      return res.status(400).json({ error: "ProductId, quantity, and type are required" });
     }
 
-    const { coursesDatabase, cartDatabase } = await connectToDatabase();
+    const { coursesDatabase, eventsDatabase, cartDatabase } = await connectToDatabase();
+    let product;
 
-    // ✅ Fetch course from DB
-    const course = await coursesDatabase.findOne({ _id: new ObjectId(productId) });
-    if (!course) {
-      return res.status(404).json({ error: "Course not found" });
+    // ✅ Fetch product based on type
+    if (type === 'course') {
+      product = await coursesDatabase.findOne({ _id: new ObjectId(productId) });
+    } else if (type === 'event') {
+      product = await eventsDatabase.findOne({ _id: new ObjectId(productId) });
+    } else {
+      return res.status(400).json({ error: "Invalid product type" });
     }
 
-    // ✅ Check if item already exists in cart
-    const existingItem = await cartDatabase.findOne({ productId });
+    if (!product) {
+      return res.status(404).json({ error: "Product not found" });
+    }
+
+    // ✅ Check if item already exists in cart (include type in search)
+    const existingItem = await cartDatabase.findOne({ 
+      productId,
+      type 
+    });
 
     if (existingItem) {
-      // update quantity
+      // Update quantity for existing item
       await cartDatabase.updateOne(
-        { productId },
+        { productId, type },
         { $inc: { quantity } }
       );
     } else {
-      // insert new item
+      // Insert new item with type
       await cartDatabase.insertOne({
         productId,
-        name: course.name,
-        price: course.price,
+        name: product.title || product.name,
+        price: product.price,
         quantity,
+        type,
+        image: product.image,
+        // Add event-specific fields if needed
+        ...(type === 'event' && {
+          date: product.date,
+          time: product.time,
+          location: product.location
+        })
       });
     }
 
     const updatedCart = await cartDatabase.find().toArray();
     res.status(201).json(updatedCart);
   } catch (err) {
-    console.error(err);
+    console.error("Cart POST error:", err);
     res.status(500).json({ error: "Server error" });
   }
 });
@@ -63,9 +81,14 @@ router.post("/", async (req, res) => {
 router.delete("/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
+    const { type } = req.query; // Get type from query params
     const { cartDatabase } = await connectToDatabase();
 
-    const result = await cartDatabase.deleteOne({ productId });
+    const result = await cartDatabase.deleteOne({ 
+      productId,
+      ...(type && { type }) // Include type if provided
+    });
+    
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
@@ -76,6 +99,7 @@ router.delete("/:productId", async (req, res) => {
     res.status(500).json({ error: "Server error" });
   }
 });
+
 
 // DELETE all cart items
 router.delete("/clear", async (req, res) => {

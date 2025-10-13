@@ -11,6 +11,8 @@ const bookingsRoutes = require("./routes/bookings");
 const blogsRoutes = require("./routes/blogs");
 const cartRoutes = require("./routes/cart");
 const commentsRoutes = require("./routes/comments");
+const paymentRoutes = require("./routes/payments");
+
 
 const app = express();
 const port = process.env.PORT || 5000;
@@ -33,6 +35,7 @@ app.use("/bookings", bookingsRoutes);
 app.use("/blogs", blogsRoutes);
 app.use("/cart", cartRoutes);
 app.use("/comments", commentsRoutes);
+app.use("/payments", paymentRoutes);
 
 // Root
 app.get("/", (req, res) => {
