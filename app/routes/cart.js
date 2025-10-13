@@ -6,8 +6,10 @@ const connectToDatabase = require("../db");
 // GET all cart items
 router.get("/", async (req, res) => {
   try {
+    const { userEmail } = req.query;
     const { cartDatabase } = await connectToDatabase();
-    const cartItems = await cartDatabase.find().toArray();
+    const query = userEmail ? { userEmail } : {};
+    const cartItems = await cartDatabase.find(query).toArray();
     res.json(cartItems);
   } catch (err) {
     console.error(err);
@@ -15,6 +17,7 @@ router.get("/", async (req, res) => {
   }
 });
 
+// Post cart items
 router.post("/", async (req, res) => {
   try {
     const { productId, quantity, type } = req.body; // Added 'type' parameter
@@ -60,6 +63,7 @@ router.post("/", async (req, res) => {
         quantity,
         type,
         image: product.image,
+        userEmail: user.email,
         // Add event-specific fields if needed
         ...(type === "event" && {
           date: product.date,
