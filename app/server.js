@@ -12,6 +12,7 @@ const blogsRoutes = require("./routes/blogs");
 const cartRoutes = require("./routes/cart");
 const commentsRoutes = require("./routes/comments");
 const paymentRoutes = require("./routes/payments");
+const verifyToken = require("./routes/verifyToken");
 
 
 const app = express();
@@ -33,9 +34,10 @@ app.use("/categories", categoriesRoutes);
 app.use("/events", eventsRoutes);
 app.use("/bookings", bookingsRoutes);
 app.use("/blogs", blogsRoutes);
-app.use("/cart", cartRoutes);
 app.use("/comments", commentsRoutes);
 app.use("/payments", paymentRoutes);
+// Apply verifyToken middleware to all cart routes
+app.use("/cart", verifyToken, cartRoutes);
 
 // Root
 app.get("/", (req, res) => {

@@ -2,14 +2,18 @@ const express = require("express");
 const router = express.Router();
 const { ObjectId } = require("mongodb");
 const connectToDatabase = require("../db");
+const verifyToken = require("./verifyToken");
+
+router.use(verifyToken);
 
 // GET all cart items
 router.get("/", async (req, res) => {
   try {
-    const { userEmail } = req.query;
+    const userEmail = req.user.email;
     const { cartDatabase } = await connectToDatabase();
-    const query = userEmail ? { userEmail } : {};
-    const cartItems = await cartDatabase.find(query).toArray();
+    const cartItems = await cartDatabase
+      .find({ userEmail: userEmail })
+      .toArray();
     res.json(cartItems);
   } catch (err) {
     console.error(err);
@@ -20,7 +24,8 @@ router.get("/", async (req, res) => {
 // Post cart items
 router.post("/", async (req, res) => {
   try {
-    const { productId, quantity, type } = req.body; // Added 'type' parameter
+    const { productId, quantity, type } = req.body;
+    const userEmail = req.user.email;
 
     if (!productId || !quantity || !type) {
       return res
@@ -32,7 +37,7 @@ router.post("/", async (req, res) => {
       await connectToDatabase();
     let product;
 
-    // ✅ Fetch product based on type
+    // Fetch product based on type
     if (type === "course") {
       product = await coursesDatabase.findOne({ _id: new ObjectId(productId) });
     } else if (type === "event") {
@@ -45,15 +50,19 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Product not found" });
     }
 
-    // ✅ Check if item already exists in cart (include type in search)
+    // Check if item already exists in cart (include type in search)
     const existingItem = await cartDatabase.findOne({
       productId,
       type,
+      userEmail,
     });
 
     if (existingItem) {
       // Update quantity for existing item
-      await cartDatabase.updateOne({ productId, type }, { $inc: { quantity } });
+      await cartDatabase.updateOne(
+        { productId, type, userEmail },
+        { $inc: { quantity } }
+      );
     } else {
       // Insert new item with type
       await cartDatabase.insertOne({
@@ -63,7 +72,7 @@ router.post("/", async (req, res) => {
         quantity,
         type,
         image: product.image,
-        userEmail: user.email,
+        userEmail: userEmail,
         // Add event-specific fields if needed
         ...(type === "event" && {
           date: product.date,
@@ -73,7 +82,7 @@ router.post("/", async (req, res) => {
       });
     }
 
-    const updatedCart = await cartDatabase.find().toArray();
+    const updatedCart = await cartDatabase.find({ userEmail }).toArray();
     res.status(201).json(updatedCart);
   } catch (err) {
     console.error("Cart POST error:", err);
@@ -86,6 +95,7 @@ router.patch("/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
     const { type, quantity } = req.body;
+    const userEmail = req.user.email;
 
     if (!type || quantity === undefined || quantity === null) {
       return res.status(400).json({ error: "Type and quantity are required" });
@@ -102,6 +112,7 @@ router.patch("/:productId", async (req, res) => {
     const existingItem = await cartDatabase.findOne({
       productId,
       type,
+      userEmail,
     });
 
     if (!existingItem) {
@@ -110,8 +121,8 @@ router.patch("/:productId", async (req, res) => {
 
     // For quantity 0, remove the item from cart
     if (quantity === 0) {
-      await cartDatabase.deleteOne({ productId, type });
-      const updatedCart = await cartDatabase.find().toArray();
+      await cartDatabase.deleteOne({ productId, type, userEmail });
+      const updatedCart = await cartDatabase.find({ userEmail }).toArray();
       return res.json(updatedCart);
     }
 
@@ -135,9 +146,12 @@ router.patch("/:productId", async (req, res) => {
     }
 
     // Update the quantity
-    await cartDatabase.updateOne({ productId, type }, { $set: { quantity } });
+    await cartDatabase.updateOne(
+      { productId, type, userEmail },
+      { $set: { quantity } }
+    );
 
-    const updatedCart = await cartDatabase.find().toArray();
+    const updatedCart = await cartDatabase.find({ userEmail }).toArray();
     res.json(updatedCart);
   } catch (err) {
     console.error("Cart PATCH error:", err);
@@ -149,19 +163,23 @@ router.patch("/:productId", async (req, res) => {
 router.delete("/:productId", async (req, res) => {
   try {
     const { productId } = req.params;
-    const { type } = req.query; // Get type from query params
+    const { type } = req.query;
+    const userEmail = req.user.email;
+
     const { cartDatabase } = await connectToDatabase();
 
     const result = await cartDatabase.deleteOne({
       productId,
       ...(type && { type }), // Include type if provided
+      userEmail,
     });
 
     if (result.deletedCount === 0) {
       return res.status(404).json({ error: "Item not found" });
     }
 
-    res.json({ success: true });
+    const updatedCart = await cartDatabase.find({ userEmail }).toArray();
+    res.json(updatedCart);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });
@@ -171,8 +189,9 @@ router.delete("/:productId", async (req, res) => {
 // DELETE all cart items
 router.delete("/clear", async (req, res) => {
   try {
+    const userEmail = req.user.email;
     const { cartDatabase } = await connectToDatabase();
-    await cartDatabase.deleteMany({});
+    await cartDatabase.deleteMany({ userEmail });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
