@@ -9,18 +9,22 @@ const stripe = Stripe(process.env.STRIPE_SECRET_KEY);
 router.post("/create-payment-intent", async (req, res) => {
   try {
     const { cartItems, email } = req.body;
-    
+
     if (!cartItems || !email || !Array.isArray(cartItems)) {
-      return res.status(400).json({ error: "Invalid data: cartItems and email are required" });
+      return res
+        .status(400)
+        .json({ error: "Invalid data: cartItems and email are required" });
     }
 
     // Calculate total amount in cents
     const amount = Math.round(
-      cartItems.reduce((total, item) => total + (item.price * item.quantity), 0) * 100
+      cartItems.reduce((total, item) => total + item.price * item.quantity, 0) *
+        100
     );
 
     // Validate amount
-    if (amount < 50) { // Stripe requires minimum amount (50 cents = $0.50)
+    if (amount < 50) {
+      // Stripe requires minimum amount (50 cents = $0.50)
       return res.status(400).json({ error: "Amount must be at least $0.50" });
     }
 
@@ -28,19 +32,21 @@ router.post("/create-payment-intent", async (req, res) => {
       amount: amount,
       currency: "usd",
       receipt_email: email,
-      metadata: { 
+      metadata: {
         integration_check: "accept_a_payment",
-        cart_items: JSON.stringify(cartItems.map(item => ({
-          id: item.productId,
-          type: item.type,
-          quantity: item.quantity
-        })))
+        cart_items: JSON.stringify(
+          cartItems.map((item) => ({
+            id: item.productId,
+            type: item.type,
+            quantity: item.quantity,
+          }))
+        ),
       },
     });
 
-    res.json({ 
+    res.json({
       clientSecret: paymentIntent.client_secret,
-      paymentIntentId: paymentIntent.id 
+      paymentIntentId: paymentIntent.id,
     });
   } catch (err) {
     console.error("Payment intent error:", err);
