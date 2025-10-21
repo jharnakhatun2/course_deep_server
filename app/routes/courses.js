@@ -7,7 +7,7 @@ const connectToDatabase = require("../db");
 router.get("/", async (req, res) => {
   try {
     const { coursesDatabase } = await connectToDatabase();
-    const result = await coursesDatabase.find().toArray();
+    const result = await coursesDatabase.find().sort({ _id: -1 }).toArray();
     res.send(result);
   } catch (err) {
     res.status(500).send("Server error");
@@ -40,7 +40,7 @@ router.post("/", async (req, res) => {
 });
 
 // UPDATE course by ID
-router.patch("/:id", async (req, res) => {
+router.put("/:id", async (req, res) => {
   try {
     const { coursesDatabase } = await connectToDatabase();
     const id = req.params.id;
