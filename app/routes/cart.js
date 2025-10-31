@@ -32,7 +32,7 @@ router.post("/", async (req, res) => {
       return res.status(400).json({ error: "Missing required fields" });
     }
 
-    // ✅ CHECK: Prevent adding already booked events to cart
+    // CHECK: Prevent adding already booked events to cart
     if (cartItem.type === "event") {
       const existingBooking = await bookingsDatabase.findOne({
         userEmail: cartItem.userEmail,
@@ -46,7 +46,7 @@ router.post("/", async (req, res) => {
         });
       }
 
-      // 🔥 CHECK: Prevent adding duplicate events to cart
+      // CHECK: Prevent adding duplicate events to cart
       const existingCartItem = await cartDatabase.findOne({
         userEmail: cartItem.userEmail,
         productId: cartItem.productId,
@@ -60,7 +60,7 @@ router.post("/", async (req, res) => {
       }
     }
 
-    // 🔥 STORE: Complete cart item with all product data
+    // STORE: Complete cart item with all product data
     const result = await cartDatabase.insertOne({
       // Basic cart fields
       productId: cartItem.productId,

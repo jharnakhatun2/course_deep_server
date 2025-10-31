@@ -27,6 +27,7 @@ async function connectToDatabase() {
     blogsDatabase: db.collection("blogs"),
     eventsDatabase: db.collection("events"),
     bookingsDatabase: db.collection("bookings"),
+    enrollmentsDatabase: db.collection("enrollments"),
     cartDatabase: db.collection("cart"),
   };
 }
