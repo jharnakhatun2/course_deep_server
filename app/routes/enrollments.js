@@ -76,8 +76,9 @@ router.post("/", async (req, res) => {
       return res.status(404).json({ error: "Course not found!" });
     }
 
+    const isCourseFree = course.price <= 0;
     // For paid courses, validate payment
-    if (!course.isFree) {
+    if (!isCourseFree) {
       if (!enrollmentData.paymentIntentId || enrollmentData.paymentStatus !== "succeeded") {
         return res.status(400).json({ error: "Payment required for this course!" });
       }
@@ -100,7 +101,7 @@ router.post("/", async (req, res) => {
       courseImage: course.image,
       instructorName: course.teacher.name,
       coursePrice: course.price,
-      isFree: course.isFree || false,
+      isFree: isCourseFree,
 
       // Curriculum and progress tracking
       curriculum: course.curriculum,
