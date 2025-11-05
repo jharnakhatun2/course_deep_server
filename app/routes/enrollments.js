@@ -109,6 +109,7 @@ router.post("/", async (req, res) => {
       progress: 0,
       completedLessons: [],
       currentLesson: allLessons.length > 0 ? allLessons[0].lessonId : null,
+      currentVideoId: allLessons.length > 0 ? allLessons[0].videoId : null,
       currentDay: 1,
       status: "active",
 
@@ -151,7 +152,7 @@ router.post("/", async (req, res) => {
 router.patch("/:enrollmentId/progress", async (req, res) => {
   try {
     const { enrollmentId } = req.params;
-    const { lessonId, completed, progress, currentDay } = req.body;
+    const { lessonId, videoId, completed, progress, currentDay } = req.body; // Add videoId
 
     const { enrollmentsDatabase } = await connectToDatabase();
 
@@ -168,9 +169,14 @@ router.patch("/:enrollmentId/progress", async (req, res) => {
       lastAccessedAt: new Date(),
     };
 
-    // Update current lesson
+    // Update current lesson and video ID
     if (lessonId) {
       updateData.currentLesson = lessonId;
+      // Find the corresponding video ID
+      const lesson = enrollment.allLessons.find(l => l.lessonId === lessonId);
+      if (lesson) {
+        updateData.currentVideoId = lesson.videoId;
+      }
     }
 
     // Update current day
@@ -218,7 +224,8 @@ router.patch("/:enrollmentId/progress", async (req, res) => {
       success: true, 
       message: "Progress updated",
       progress: updateData.progress,
-      completedLessons: updateData.completedLessons || enrollment.completedLessons
+      completedLessons: updateData.completedLessons || enrollment.completedLessons,
+      currentVideoId: updateData.currentVideoId || enrollment.currentVideoId
     });
   } catch (err) {
     console.error("Update progress error:", err);
@@ -287,6 +294,7 @@ router.get("/:enrollmentId/course-content", async (req, res) => {
       instructor: course.teacher,
       progress: enrollment.progress,
       currentLesson: enrollment.currentLesson,
+      currentVideoId: enrollment.currentVideoId,
       currentDay: enrollment.currentDay,
       completedLessons: enrollment.completedLessons,
       curriculum: course.curriculum.map(day => ({
@@ -294,14 +302,18 @@ router.get("/:enrollmentId/course-content", async (req, res) => {
         title: day.title,
         duration: day.duration,
         lectures: day.lectures,
-        lessons: day.lessons.map(lesson => ({
-          lessonId: generateLessonId(day.id, lesson.title),
-          title: lesson.title,
-          duration: lesson.duration,
-          type: lesson.type,
-          isCompleted: enrollment.completedLessons.includes(generateLessonId(day.id, lesson.title)),
-          isLocked: isLessonLocked(day.id, enrollment.currentDay, enrollment.completedLessons, course.curriculum)
-        }))
+        lessons: day.lessons.map(lesson => {
+          const lessonId = generateLessonId(day.id, lesson.title);
+          return {
+            lessonId: lessonId,
+            videoId: lesson.id,
+            title: lesson.title,
+            duration: lesson.duration,
+            type: lesson.type,
+            isCompleted: enrollment.completedLessons.includes(lessonId),
+            isLocked: isLessonLocked(day.id, enrollment.currentDay, enrollment.completedLessons, course.curriculum)
+          };
+        })
       }))
     };
 
@@ -335,11 +347,19 @@ router.post("/:enrollmentId/complete-lesson", async (req, res) => {
     const totalLessons = enrollment.allLessons.length;
     const progress = Math.round((completedLessons.length / totalLessons) * 100);
 
+    // Find next lesson's video ID
+    let nextVideoId = null;
+    if (nextLessonId) {
+      const nextLesson = enrollment.allLessons.find(l => l.lessonId === nextLessonId);
+      nextVideoId = nextLesson ? nextLesson.videoId : null;
+    }
+
     const updateData = {
       completedLessons,
       progress,
       lastAccessedAt: new Date(),
       currentLesson: nextLessonId || enrollment.currentLesson,
+      currentVideoId: nextVideoId || enrollment.currentVideoId,
     };
 
     // Update current day if provided
@@ -363,7 +383,8 @@ router.post("/:enrollmentId/complete-lesson", async (req, res) => {
       message: "Lesson marked as completed",
       progress,
       completedLessons,
-      nextLessonId: updateData.currentLesson
+      nextLessonId: updateData.currentLesson,
+      nextVideoId: updateData.currentVideoId
     });
   } catch (err) {
     console.error("Complete lesson error:", err);
@@ -398,6 +419,43 @@ router.get("/check-duplicate/:courseId", async (req, res) => {
   }
 });
 
+// GET video ID for a specific lesson
+//=============================================================================================
+router.get("/:enrollmentId/lesson/:lessonId/video", async (req, res) => {
+  try {
+    const { enrollmentId, lessonId } = req.params;
+    const { enrollmentsDatabase } = await connectToDatabase();
+
+    const enrollment = await enrollmentsDatabase.findOne({
+      _id: new ObjectId(enrollmentId),
+    });
+
+    if (!enrollment) {
+      return res.status(404).json({ error: "Enrollment not found" });
+    }
+
+    // Find the lesson in allLessons array
+    const lesson = enrollment.allLessons.find(l => l.lessonId === lessonId);
+    
+    if (!lesson) {
+      return res.status(404).json({ error: "Lesson not found" });
+    }
+
+    res.json({
+      lessonId: lesson.lessonId,
+      videoId: lesson.videoId,
+      title: lesson.title,
+      duration: lesson.duration,
+      type: lesson.type,
+      dayId: lesson.dayId,
+      dayTitle: lesson.dayTitle
+    });
+  } catch (err) {
+    console.error("Get video ID error:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
 // Helper function to process curriculum for tracking
 function processCurriculumForTracking(curriculum) {
   const allLessons = [];
@@ -407,6 +465,7 @@ function processCurriculumForTracking(curriculum) {
       const lessonId = generateLessonId(day.id, lesson.title);
       allLessons.push({
         lessonId: lessonId,
+        videoId: lesson.id,
         dayId: day.id,
         dayTitle: day.title,
         title: lesson.title,
