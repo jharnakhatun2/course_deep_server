@@ -420,7 +420,6 @@ router.get("/check-duplicate/:courseId", async (req, res) => {
 });
 
 // GET video ID for a specific lesson
-//=============================================================================================
 router.get("/:enrollmentId/lesson/:lessonId/video", async (req, res) => {
   try {
     const { enrollmentId, lessonId } = req.params;
