@@ -21,7 +21,7 @@ const port = process.env.PORT || 5000;
 
 // middleware
 app.use(cors({
-  origin: ["http://localhost:5173", "https://course-deep.vercel.app"],
+  origin: ["https://course-deep.vercel.app","http://localhost:5173"],
   credentials: true,
 }));
 app.use(express.json());
@@ -50,6 +50,8 @@ app.get("/", (req, res) => {
 app.get("/health", (req, res) => {
   res.status(200).send("OK");
 });
+
+app.set("trust proxy", 1);
 
 //local server
 app.listen(port, () =>{
