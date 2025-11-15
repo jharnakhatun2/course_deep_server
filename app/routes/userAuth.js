@@ -9,17 +9,26 @@ const router = express.Router();
 router.post("/register", async (req, res) => {
   try {
     const { userDatabase } = await connectToDatabase();
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
+
+    // Validate required fields
+    if (!name || !email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    // Check if user already exists
     const existingUser = await userDatabase.findOne({ email });
     if (existingUser) {
       return res.status(409).json({ message: "Email already registered" });
     }
+
+    // Hash password and create user
     const hashedPassword = await bcrypt.hash(password, 10);
     const result = await userDatabase.insertOne({
       name,
       email,
       password: hashedPassword,
-      role: "user",
+      role: role || "student",
       createdAt: new Date(),
     });
 
@@ -28,6 +37,7 @@ router.post("/register", async (req, res) => {
       userId: result.insertedId,
     });
   } catch (err) {
+    console.error("Registration error:", err);
     res.status(500).json({ message: "Registration error", error: err.message });
   }
 });
@@ -36,16 +46,31 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { userDatabase } = await connectToDatabase();
-    const { email, password } = req.body;
+    const { email, password, role } = req.body;
+
+     // Validate required fields
+    if (!email || !password || !role) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+    
+    //Find user
     const user = await userDatabase.findOne({ email });
-    if (!user) return res.status(404).json({ message: "Email not found" });
+    if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Verify password
     const isPasswordValid = await bcrypt.compare(password, user.password);
-    if (!isPasswordValid)
+    if (!isPasswordValid){
       return res.status(401).json({ message: "Incorrect password" });
+    }
 
+    // Verify role
+    if (user.role !== role) {
+      return res.status(403).json({ message: "Role mismatch" });
+    }
+      
+    // Generate token
     const token = jwt.sign(
-      { email: user.email, role: user.role },
+      { userId: user._id, email: user.email, role: user.role },
       process.env.ACCESS_TOKEN,
       {
         expiresIn: "7d",
@@ -61,16 +86,18 @@ router.post("/login", async (req, res) => {
       createdAt: user.createdAt
     };
 
+    // Set cookie and send response
     res
       .cookie("token", token, {
         httpOnly: true,
         secure: true,
         sameSite: "none",
-        maxAge: 7 * 24 * 60 * 60 * 1000,
+        maxAge: 7 * 24 * 60 * 60 * 1000, //7 days
       })
       .json({ message: "Login successful", token: token, user: userWithoutPassword });
   } catch (err) {
-    res.status(500).json({ message: "Login error", error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({ message: "Login Failed!", error: err.message });
   }
 });
 
