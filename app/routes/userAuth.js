@@ -46,10 +46,10 @@ router.post("/register", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { userDatabase } = await connectToDatabase();
-    const { email, password, role } = req.body;
+    const { email, password } = req.body;
 
      // Validate required fields
-    if (!email || !password || !role) {
+    if (!email || !password) {
       return res.status(400).json({ message: "All fields are required" });
     }
     
@@ -63,10 +63,6 @@ router.post("/login", async (req, res) => {
       return res.status(401).json({ message: "Incorrect password" });
     }
 
-    // Verify role
-    if (user.role !== role) {
-      return res.status(403).json({ message: "Role mismatch" });
-    }
       
     // Generate token
     const token = jwt.sign(
