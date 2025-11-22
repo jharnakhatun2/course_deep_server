@@ -10,7 +10,7 @@ router.get("/", async (req, res) => {
     const result = await instructorCoursesDatabase.find().sort({ _id: -1 }).toArray();
     res.send(result);
   } catch (err) {
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -23,7 +23,7 @@ router.get("/:id", async (req, res) => {
     const result = await instructorCoursesDatabase.findOne(query);
     result ? res.send(result) : res.status(404).send("Course not found");
   } catch (err) {
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -35,7 +35,7 @@ router.post("/", async (req, res) => {
     const result = await instructorCoursesDatabase.insertOne(courseInfo);
     res.send(result);
   } catch (err) {
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -50,7 +50,7 @@ router.put("/:id", async (req, res) => {
     const result = await instructorCoursesDatabase.updateOne(filter, updateDoc, options);
     res.send(result);
   } catch (err) {
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Server error" });
   }
 });
 
@@ -63,7 +63,7 @@ router.delete("/:id", async (req, res) => {
     const result = await instructorCoursesDatabase.deleteOne(query);
     res.send(result);
   } catch (err) {
-    res.status(500).send("Server error");
+    res.status(500).json({ error: "Server error" });
   }
 });
 
