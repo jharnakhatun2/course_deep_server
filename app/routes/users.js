@@ -111,6 +111,35 @@ router.patch("/", verifyToken, async (req, res) => {
   }
 });
 
+/******************** Update User Role (Admin Only) ********************/
+router.patch("/role/:id", verifyToken, async (req, res) => {
+  try {
+    const { userDatabase } = await connectToDatabase();
+    const id = req.params.id;
+    const { role } = req.body;
+
+    // Only admin can update roles
+    if (req.user.role !== "admin") {
+      return res.status(403).json({ message: "Access denied" });
+    }
+
+    const filter = { _id: new ObjectId(id) };
+    const updateDoc = { $set: { role, updatedAt: new Date() } };
+
+    const result = await userDatabase.updateOne(filter, updateDoc);
+
+    if (result.matchedCount === 0) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json({ success: true, message: "Role updated successfully" });
+  } catch (err) {
+    console.error("Role update error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+
 /******************** Delete ********************/
 // Delete user - user can delete their own account, admin can delete any
 router.delete("/:id", verifyToken, async (req, res) => {

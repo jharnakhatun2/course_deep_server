@@ -23,6 +23,7 @@ async function connectToDatabase() {
   return {
     userDatabase: db.collection("users"),
     coursesDatabase: db.collection("courses"),
+    instructorCoursesDatabase: db.collection("instructor-courses"),
     categoriesDatabase: db.collection("categories"),
     blogsDatabase: db.collection("blogs"),
     eventsDatabase: db.collection("events"),
