@@ -6,7 +6,6 @@ const { ObjectId } = require("mongodb");
 const verifyToken = require("./verifyToken");
 const router = express.Router();
 
-
 /******************** Check Current User ********************/
 router.get("/me", verifyToken, async (req, res) => {
   try {
@@ -14,12 +13,17 @@ router.get("/me", verifyToken, async (req, res) => {
       return res.status(401).json({ message: "Unauthorized" });
     }
 
-    const { userDatabase } = await connectToDatabase();
+    const { userDatabase, enrollmentsDatabase } = await connectToDatabase();
     const user = await userDatabase.findOne({ email: req.user.email }, { projection: { password: 0 } });
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Count enrolled courses for current user
+    const enrolledCoursesCount = await enrollmentsDatabase.countDocuments({
+      userEmail: user.email
+    });
 
     // Return the same user object structure as login
     const userWithoutPassword = {
@@ -27,10 +31,11 @@ router.get("/me", verifyToken, async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      createdAt: user.createdAt
+      createdAt: user.createdAt,
+      enrolledCourses: enrolledCoursesCount
     };
 
-    res.json(userWithoutPassword); // ← Remove the nested "user" property
+    res.json(userWithoutPassword);
   } catch (error) {
     console.error("Get current user error:", error);
     res.status(500).json({ message: "Server error" });
@@ -40,17 +45,31 @@ router.get("/me", verifyToken, async (req, res) => {
 /******************** Get all User ********************/
 router.get("/", verifyToken, async (req, res) => {
   try {
-
     // Only allow admins to get all users
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const { userDatabase } = await connectToDatabase();
-    const result = await userDatabase.find({},
-      { projection: { password: 0 } }).toArray();
+    const { userDatabase, enrollmentsDatabase } = await connectToDatabase();
+    
+    // Get all users
+    const users = await userDatabase.find({}, { projection: { password: 0 } }).toArray();
 
-    res.json(result);
+    // Get enrollment counts for all users
+    const usersWithEnrolledCourses = await Promise.all(
+      users.map(async (user) => {
+        const enrolledCoursesCount = await enrollmentsDatabase.countDocuments({
+          userEmail: user.email
+        });
+
+        return {
+          ...user,
+          enrolledCourses: enrolledCoursesCount
+        };
+      })
+    );
+
+    res.json(usersWithEnrolledCourses);
   } catch (err) {
     console.error("Get users error:", err);
     res.status(500).json({ message: "Server error" });
@@ -60,7 +79,7 @@ router.get("/", verifyToken, async (req, res) => {
 /******************** Get User by ID ********************/
 router.get("/:id", verifyToken, async (req, res) => {
   try {
-    const { userDatabase } = await connectToDatabase();
+    const { userDatabase, enrollmentsDatabase } = await connectToDatabase();
     const id = req.params.id;
 
     // Users can only access their own data unless they're admin
@@ -69,8 +88,23 @@ router.get("/:id", verifyToken, async (req, res) => {
     }
 
     const query = { _id: new ObjectId(id) };
-    const result = await userDatabase.findOne(query, { projection: { password: 0 } });
-    result ? res.json(result) : res.status(404).json({ message: "User not found" });
+    const user = await userDatabase.findOne(query, { projection: { password: 0 } });
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Count enrolled courses using user's email
+    const enrolledCoursesCount = await enrollmentsDatabase.countDocuments({
+      userEmail: user.email
+    });
+
+    const userWithEnrolledCourses = {
+      ...user,
+      enrolledCourses: enrolledCoursesCount
+    };
+
+    res.json(userWithEnrolledCourses);
   } catch (err) {
     console.error("Get user error:", err);
     res.status(500).json({ message: "Server error" });
@@ -78,7 +112,6 @@ router.get("/:id", verifyToken, async (req, res) => {
 });
 
 /******************** Update ********************/
-// Update user info - only if token email matches
 router.patch("/", verifyToken, async (req, res) => {
   try {
     const { userDatabase } = await connectToDatabase();
@@ -87,7 +120,7 @@ router.patch("/", verifyToken, async (req, res) => {
 
     // Ensure the logged-in user can only update their own info
     if (req.user.email !== user.email) {
-      return res.status(403).json({ message: "Access Denided!" });
+      return res.status(403).json({ message: "Access Denied!" });
     }
 
     const updateUser = {
@@ -95,7 +128,6 @@ router.patch("/", verifyToken, async (req, res) => {
         name: user.name,
         updatedAt: new Date(),
         lastSignInTime: user.lastSignInTime,
-        // Don't allow email change here unless you handle it carefully
       },
     };
 
@@ -139,12 +171,10 @@ router.patch("/role/:id", verifyToken, async (req, res) => {
   }
 });
 
-
 /******************** Delete ********************/
-// Delete user - user can delete their own account, admin can delete any
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
-    const { userDatabase } = await connectToDatabase();
+    const { userDatabase, enrollmentsDatabase } = await connectToDatabase();
     const id = req.params.id;
     const userToDelete = await userDatabase.findOne({
       _id: new ObjectId(id),
@@ -162,13 +192,19 @@ router.delete("/:id", verifyToken, async (req, res) => {
       return res.status(403).json({ message: "Access denied!" });
     }
 
+    // Delete user's enrollments first
+    await enrollmentsDatabase.deleteMany({
+      userEmail: userToDelete.email
+    });
+
+    // Then delete the user
     await userDatabase.deleteOne({ _id: new ObjectId(id) });
-    res.json({ success: true, message: "User deleted successfully" });
+    
+    res.json({ success: true, message: "User and their enrollments deleted successfully" });
   } catch (error) {
     console.error("Delete user error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
-
 
 module.exports = router;
