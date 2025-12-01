@@ -45,8 +45,8 @@ router.get("/me", verifyToken, async (req, res) => {
 /******************** Get all User ********************/
 router.get("/", verifyToken, async (req, res) => {
   try {
-    // Only allow admins to get all users
-    if (req.user.role !== "admin") {
+    // Only allow super admin and admins to get all users
+    if (!["admin", "super_admin"].includes(req.user.role)) {
       return res.status(403).json({ message: "Access denied" });
     }
 
