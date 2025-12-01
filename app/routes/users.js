@@ -150,19 +150,24 @@ router.patch("/role/:id", verifyToken, async (req, res) => {
     const id = req.params.id;
     const { role } = req.body;
 
-    // Only admin can update roles
     if (req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied" });
     }
 
-    const filter = { _id: new ObjectId(id) };
-    const updateDoc = { $set: { role, updatedAt: new Date() } };
-
-    const result = await userDatabase.updateOne(filter, updateDoc);
-
-    if (result.matchedCount === 0) {
+    const userToUpdate = await userDatabase.findOne({ _id: new ObjectId(id) });
+    if (!userToUpdate) {
       return res.status(404).json({ message: "User not found" });
     }
+
+    // Prevent changing super admin role
+    if (userToUpdate.role === "super_admin") {
+      return res.status(403).json({ message: "Super admin role cannot be changed" });
+    }
+
+    const result = await userDatabase.updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { role, updatedAt: new Date() } }
+    );
 
     res.json({ success: true, message: "Role updated successfully" });
   } catch (err) {
@@ -171,40 +176,37 @@ router.patch("/role/:id", verifyToken, async (req, res) => {
   }
 });
 
+
 /******************** Delete ********************/
 router.delete("/:id", verifyToken, async (req, res) => {
   try {
     const { userDatabase, enrollmentsDatabase } = await connectToDatabase();
     const id = req.params.id;
-    const userToDelete = await userDatabase.findOne({
-      _id: new ObjectId(id),
-    });
+    const userToDelete = await userDatabase.findOne({ _id: new ObjectId(id) });
 
     if (!userToDelete) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // Check if the requester is the same user OR an admin
-    if (
-      req.user.email !== userToDelete.email &&
-      req.user.role !== "admin"
-    ) {
+    // Prevent deleting super admin
+    if (userToDelete.role === "super_admin") {
+      return res.status(403).json({ message: "Super admin cannot be deleted" });
+    }
+
+    if (req.user.email !== userToDelete.email && req.user.role !== "admin") {
       return res.status(403).json({ message: "Access denied!" });
     }
 
-    // Delete user's enrollments first
-    await enrollmentsDatabase.deleteMany({
-      userEmail: userToDelete.email
-    });
-
-    // Then delete the user
+    // Delete enrollments first
+    await enrollmentsDatabase.deleteMany({ userEmail: userToDelete.email });
     await userDatabase.deleteOne({ _id: new ObjectId(id) });
-    
+
     res.json({ success: true, message: "User and their enrollments deleted successfully" });
   } catch (error) {
     console.error("Delete user error:", error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 });
+
 
 module.exports = router;
